@@ -74,7 +74,8 @@ const esbuild = require('esbuild');
  * @returns {{ file: string, version: number }} Snapshot path + version.
  */
 function newestFrozenContract() {
-	const versions = fs.readdirSync(VERSIONS_DIR)
+	const versions = fs
+		.readdirSync(VERSIONS_DIR)
 		.map((name) => /^v(\d+)\.d\.ts$/.exec(name))
 		.filter(Boolean)
 		.map((m) => Number(m[1]))
@@ -176,7 +177,10 @@ async function packShell(options = {}) {
 	// bundleDependencies entry in the manifest below makes npm pack carry
 	// this directory inside the tgz.
 	const sdkRoot = path.join(REPO_ROOT, 'packages', 'client-typescript');
-	if (!fs.existsSync(path.join(sdkRoot, 'dist', 'types', 'index.d.ts'))) throw new Error('pack-shell: packages/client-typescript/dist is missing — run ./builder client-typescript:build first');
+	// dist/types/client/index.d.ts (not dist/types/index.d.ts): the SDK's build moved its
+	// "." export output one level deeper once src/app-sdk joined src/client under a shared
+	// inferred rootDir of ./src — see the client-typescript package.json exports map.
+	if (!fs.existsSync(path.join(sdkRoot, 'dist', 'types', 'client', 'index.d.ts'))) throw new Error('pack-shell: packages/client-typescript/dist is missing — run ./builder client-typescript:build first');
 	const sdkPkg = JSON.parse(fs.readFileSync(path.join(sdkRoot, 'package.json'), 'utf8'));
 	vendorSdkInto(sdkRoot, path.join(STAGE_DIR, 'node_modules', 'rocketride'));
 

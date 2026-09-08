@@ -96,7 +96,26 @@ my-app/
     └── MySidebar.tsx       # Sidebar component (optional)
 ```
 
-#### 3. Define the manifest in `package.json`
+#### 3. `tsconfig.json`
+
+`rocketride/app-sdk` is resolved through `rocketride`'s `package.json` `exports` map (separate `types`/`import`/`require` conditions per subpath). `moduleResolution: "node"` (TypeScript's legacy resolver) does not consult `exports` at all and won't find the subpath's types — use one of the resolvers that does:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true
+  },
+  "include": ["src"]
+}
+```
+
+`"node16"` or `"nodenext"` work equally well here; `"bundler"` matches what rsbuild (webpack/rspack under the hood) actually does at runtime.
+
+#### 4. Define the manifest in `package.json`
 
 ```json
 {
@@ -117,7 +136,7 @@ my-app/
 }
 ```
 
-#### 4. Create the AppDescriptor (`src/AppDescriptor.ts`)
+#### 5. Create the AppDescriptor (`src/AppDescriptor.ts`)
 
 Import types from `rocketride/app-sdk`:
 
@@ -139,7 +158,7 @@ const MY_APP: AppDescriptor = {
 export default MY_APP;
 ```
 
-#### 5. Create the App component (`src/MyApp.tsx`)
+#### 6. Create the App component (`src/MyApp.tsx`)
 
 ```typescript
 import React from 'react';
@@ -158,7 +177,7 @@ const MyApp: React.FC<ShellAppProps> = ({ isConnected, identity }) => {
 export default MyApp;
 ```
 
-#### 6. Create the Sidebar component (`src/MySidebar.tsx`)
+#### 7. Create the Sidebar component (`src/MySidebar.tsx`)
 
 ```typescript
 import React from 'react';
@@ -176,13 +195,13 @@ const MySidebar: React.FC<ShellSidebarProps> = ({ collapsed }) => {
 export default MySidebar;
 ```
 
-#### 7. Async boundary (`src/index.ts`)
+#### 8. Async boundary (`src/index.ts`)
 
 ```typescript
 import('./AppDescriptor');
 ```
 
-#### 8. rsbuild.config.ts
+#### 9. rsbuild.config.ts
 
 ```typescript
 import fs from 'node:fs';
@@ -217,7 +236,7 @@ export default defineConfig(() => ({
 }));
 ```
 
-#### 9. Build and deploy
+#### 10. Build and deploy
 
 ```bash
 npx rsbuild build
@@ -1102,6 +1121,8 @@ Key points:
 - Always expose `./AppDescriptor` as the single MF entry point
 - Standalone apps share `rocketride/app-sdk`; monorepo apps share `shell` + `rocketride`
 - React and react-dom must be shared singletons to avoid duplicate instances
+- `rocketride/app-sdk`'s types resolve through `package.json`'s `exports` map — your `tsconfig.json` needs `moduleResolution: "node16" | "nodenext" | "bundler"` (see [step 3](#3-tsconfigjson) above); the legacy `"node"` resolver doesn't consult `exports` and won't find them
+- Every hook/value `rocketride/app-sdk` exports (`useShellConnection`, `connectionManager`, `Documents`, etc.) is a stub that Module Federation replaces with the shell's real implementation at runtime. Calling one outside the shell host — e.g. in a unit test — throws a clear error rather than returning `undefined`; mock the module in tests that exercise this code without the host
 
 ---
 
