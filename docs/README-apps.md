@@ -113,7 +113,7 @@ my-app/
 }
 ```
 
-`"node16"` or `"nodenext"` work equally well here; `"bundler"` matches what rsbuild (webpack/rspack under the hood) actually does at runtime.
+`"module": "Node16"` + `"moduleResolution": "node16"`, or `"module": "NodeNext"` + `"moduleResolution": "nodenext"`, work equally well — but `module` and `moduleResolution` must be changed together: TypeScript rejects `"node16"`/`"nodenext"` resolution paired with anything other than the matching `module` setting. `"bundler"` (paired with `"module": "ESNext"`, as above) matches what rsbuild (webpack/rspack under the hood) actually does at runtime.
 
 #### 4. Define the manifest in `package.json`
 
@@ -1121,7 +1121,7 @@ Key points:
 - Always expose `./AppDescriptor` as the single MF entry point
 - Standalone apps share `rocketride/app-sdk`; monorepo apps share `shell` + `rocketride`
 - React and react-dom must be shared singletons to avoid duplicate instances
-- `rocketride/app-sdk`'s types resolve through `package.json`'s `exports` map — your `tsconfig.json` needs `moduleResolution: "node16" | "nodenext" | "bundler"` (see [step 3](#3-tsconfigjson) above); the legacy `"node"` resolver doesn't consult `exports` and won't find them
+- `rocketride/app-sdk`'s types resolve through `package.json`'s `exports` map — your `tsconfig.json` needs a matched `module`/`moduleResolution` pair that consults it: `"ESNext"`/`"bundler"`, `"Node16"`/`"node16"`, or `"NodeNext"`/`"nodenext"` (see [step 3](#3-tsconfigjson) above). The legacy `"node"` resolver doesn't consult `exports` and won't find them; mixing an ESNext-family `module` with `node16`/`nodenext` resolution is a hard TypeScript error, not just unsupported
 - Every hook/value `rocketride/app-sdk` exports (`useShellConnection`, `connectionManager`, `Documents`, etc.) is a stub that Module Federation replaces with the shell's real implementation at runtime. Calling one outside the shell host — e.g. in a unit test — throws a clear error rather than returning `undefined`; mock the module in tests that exercise this code without the host
 
 ---
