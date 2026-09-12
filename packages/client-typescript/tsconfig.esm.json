@@ -8,6 +8,8 @@
 		"sourceMap": true
 	},
 	"include": [
+		"./src/app-pack/**/*",
+		"./src/app-scaffold/**/*",
 		"./src/app-sdk/**/*",
 		"./src/client/**/*"
 	]
